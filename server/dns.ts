@@ -1,25 +1,21 @@
-import axios from 'axios'
 
 const DefaultDnsChoice = 'google-public-dns'
 
 /**
  * 查询指定的主机名对应的 IP
  * */
-export async function queryHostnameIp(setHostname: Set<string>): Promise<Record<string, string>>
+export async function queryHostnameIp(setHostname: Set<string>, serviceDns: object): Promise<Record<string, string>>
 {
     const ret: Record<string, string> = {}
 
     for(const hostname of setHostname)
     {
-        const result = await axios({
-            url: 'https://dns.firok.space/dns-query',
-            method: 'get',
-            params: {
-                name: hostname,
-            },
+        const result = await fetch(`https://dns.firok.space/dns-query?name=${hostname}`, {
+            method: 'GET',
         })
+        const jsonResult = await result.json() as object
 
-        const data = result.data.data[DefaultDnsChoice]
+        const data = jsonResult.data[DefaultDnsChoice]
         if(data.status !== 'fulfilled' || data.value == null)
             throw '请求出错, 无法查询指定域名真实 IP: ' + hostname
 

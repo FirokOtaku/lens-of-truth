@@ -1,4 +1,4 @@
-import {AbstractLink} from '@/utils/abstract-link.ts'
+import {AbstractLink} from './abstract-link'
 
 export class SsrLink extends AbstractLink
 {

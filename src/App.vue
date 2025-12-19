@@ -33,36 +33,11 @@ html, body, #app {
 <script setup lang="ts">
 
 import {ref, onMounted,} from 'vue'
-import textBase64 from './demo'
-import {readSubscribeContent} from '@/utils/factory.ts'
 import axios from 'axios'
-import {queryHostnameIp} from '@/utils/dns.ts'
 
 const value = ref<any>(null)
 
 onMounted(async () => {
-  try
-  {
-    const listLink = readSubscribeContent(textBase64, 'auto', 'auto')
-    const setLinkHostname = new Set<string>()
-    for(const link of listLink)
-    {
-      setLinkHostname.add(link.url.hostname)
-    }
-
-    const mapHostnameToIp = await queryHostnameIp(setLinkHostname)
-
-    value.value = {
-      listLink,
-      mapHostnameToIp,
-    }
-
-    console.log('value', value.value)
-  }
-  catch(any)
-  {
-    console.warn('错误', any)
-  }
 
   window['axios'] = axios
 })

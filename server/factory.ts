@@ -1,7 +1,7 @@
-import {AbstractLink} from '@/utils/abstract-link.ts'
-import {SsLink} from '@/utils/ss-link.ts'
-import {VmessLink} from '@/utils/vmess-link.ts'
-import {SsrLink} from '@/utils/ssr-link.ts'
+import {AbstractLink} from './abstract-link'
+import {SsLink} from './ss-link'
+import {VmessLink} from './vmess-link'
+import {SsrLink} from './ssr-link'
 
 export function readLink(textUrlPlain: string): AbstractLink | null
 {
@@ -59,6 +59,14 @@ export type LinkFormat =
      * */
     'full-b64'
 
+export interface SubscribeContent
+{
+    formatSubscription: SubscriptionFormat
+
+    listLink: AbstractLink[]
+    formatLink: LinkFormat
+}
+
 /**
  * 读取完整订阅内容
  * @param {string} textSubscription 要读取的订阅内容
@@ -69,7 +77,7 @@ export function readSubscribeContent(
     textSubscription: string,
     formatSubscription: SubscriptionFormat = 'auto',
     formatLink: LinkFormat = 'auto'
-): AbstractLink[]
+): SubscribeContent
 {
     let dataSubscription: string
 
@@ -186,5 +194,9 @@ export function readSubscribeContent(
         }
     }
 
-    return listLink
+    return {
+        formatSubscription,
+        formatLink,
+        listLink,
+    }
 }
