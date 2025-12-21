@@ -1,19 +1,33 @@
+import {CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
 
 const DefaultDnsChoice = 'google-public-dns'
+const useOuterDns = true
 
 /**
  * 查询指定的主机名对应的 IP
  * */
-export async function queryHostnameIp(setHostname: Set<string>, serviceDns: object): Promise<Record<string, string>>
+export async function queryHostnameIp(setHostname: Set<string>, serviceDns: CloudflareEnvWorkerInstance): Promise<Record<string, string>>
 {
     const ret: Record<string, string> = {}
 
     for(const hostname of setHostname)
     {
-        const result = await fetch(`https://dns.firok.space/dns-query?name=${hostname}`, {
-            method: 'GET',
-        })
-        const jsonResult = await result.json() as object
+        let jsonResult: object
+        if(useOuterDns)
+        {
+            const result = await fetch(`https://dns.firok.space/dns-query?name=${hostname}`, {
+                method: 'GET',
+            })
+            jsonResult = await result.json() as object
+        }
+        else
+        {
+            const result = await serviceDns.fetch(`https://dns.firok.space/dns-query?name=${hostname}`, {
+                method: 'GET',
+            })
+            jsonResult = await result.json() as object
+        }
+
 
         const data = jsonResult.data[DefaultDnsChoice]
         if(data.status !== 'fulfilled' || data.value == null)

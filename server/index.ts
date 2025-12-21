@@ -1,34 +1,40 @@
 import textBase64 from '../src/demo'
 import {readSubscribeContent, SubscribeContent} from './factory'
 import {queryHostnameIp} from './dns'
-import {AbstractLink} from './abstract-link'
+import {CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
 
-const ResponseHeaders = new Headers()
-ResponseHeaders.append('Content-Type', 'application/json')
-ResponseHeaders.append('Access-Control-Allow-Origin', '*')
 function buildResponse(body: object | string, statusCode: number): Response
 {
+    //
+    // text/plain; charset=UTF-8
+
+    const headers = new Headers()
+    headers.append('Access-Control-Allow-Origin', '*')
+    headers.append('Cache-Control', 'private, no-cache')
+
     let bodyContent: string
     switch (typeof body)
     {
         case 'string':
             bodyContent = body
+            headers.append('Content-Type', 'text/plain')
             break
         case 'object':
             bodyContent = JSON.stringify({
                 ...(body ?? {}),
                 code: statusCode,
             })
+            headers.append('Content-Type', 'application/json')
             break
     }
 
     return new Response(bodyContent, {
         status: statusCode,
-        headers: ResponseHeaders,
+        headers,
     })
 }
 
-async function getParams(url: URL, request: Request, method: 'get' | 'post'): Record<string, any>
+async function getParams(url: URL, request: Request, method: 'get' | 'post'): Promise<Record<string, any>>
 {
     let params: Record<string, any> = {}
 
@@ -56,6 +62,8 @@ async function getParams(url: URL, request: Request, method: 'get' | 'post'): Re
 export default {
 	async fetch(request, env, ctx): Promise<Response>
     {
+        console.log('incoming | request', request, 'env', env, 'ctx', ctx)
+
 		const url = new URL(request.url)
         const pathname = url.pathname
         const method = request.method.toLocaleLowerCase()
@@ -69,12 +77,13 @@ export default {
         {
             case '/api/reveal/':
             case '/api/reveal':
-                const params = getParams(url, request, method)
+                const params = await getParams(url, request, method)
 
                 const link: string | null = params['link'] // 要读取的订阅链接
                 if(typeof link !== 'string' || link.trim().length === 0)
                     return buildResponse({
                         msg: '参数错误',
+                        data: params,
                     }, 400)
 
                 const useRealDns: boolean = params['real'] == null || params['real'] === 'true' // 是否将订阅内容中所有域名转换为真实 IP
@@ -122,14 +131,14 @@ export default {
                 let mapHostnameToIp: Record<string, string>
                 try
                 {
-                    const serviceDns: object = env.dns
+                    const serviceDns: CloudflareEnvWorkerInstance = env.dns
                     mapHostnameToIp = await queryHostnameIp(setLinkHostname, serviceDns)
                 }
                 catch (any)
                 {
                     return buildResponse({
                         msg: '查询真实 IP 出错',
-                        error: any,
+                        error: `${any}`,
                     }, 500)
                 }
 
@@ -143,7 +152,43 @@ export default {
                     listUrlRelaceHost.push(urlReplaceHost)
                 }
 
-                return buildResponse({}, 200)
+                // const charLineSeparator = '\r\n'
+                const charLineSeparator = '\n'
+                let content = ``
+                for(const url of listUrlRelaceHost)
+                {
+                    const textUrl = url.toString()
+                    switch(subscribeContent.formatLink)
+                    {
+                        case 'content-b64':
+                            const indexUrlContent = textUrl.indexOf('//') + 2
+                            const textUrlContent = textUrl.substring(indexUrlContent)
+                            content += `${url.protocol}//${btoa(textUrlContent)}${charLineSeparator}`
+                            break
+                        case 'full-b64':
+                            const textContentB64 = btoa(textUrl)
+                            content += `${textContentB64}${charLineSeparator}`
+                            break
+
+                        case 'plain':
+                        default:
+                            content += `${textUrl}${charLineSeparator}`
+                            break
+                    }
+                }
+
+                switch(subscribeContent.formatSubscription)
+                {
+                    case 'base64':
+                        content = btoa(content)
+                        break
+
+                    case 'plain':
+                    default:
+                        break // do nothing
+                }
+
+                return buildResponse(content, 200)
 
             default:
                 return buildResponse({
