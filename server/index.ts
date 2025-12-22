@@ -1,7 +1,7 @@
 import textBase64 from '../src/demo'
 import {readSubscribeContent, SubscribeContent} from './factory'
 import {queryHostnameIp} from './dns'
-import {CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
+import {CloudflareEnvWithDnsService, CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
 
 function buildResponse(body: object | string, statusCode: number): Response
 {
@@ -196,4 +196,5 @@ export default {
                 }, 404)
         }
 	},
-} satisfies ExportedHandler<Env>;
+// } satisfies ExportedHandler<Env>;
+} satisfies ExportedHandler<CloudflareEnvWithDnsService>;

@@ -39,7 +39,7 @@ const value = ref<any>(null)
 
 onMounted(async () => {
 
-  window['axios'] = axios
+  // window.axios = axios
 })
 
 

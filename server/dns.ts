@@ -12,7 +12,7 @@ export async function queryHostnameIp(setHostname: Set<string>, serviceDns: Clou
 
     for(const hostname of setHostname)
     {
-        let jsonResult: object
+        let jsonResult: Record<string, any>
         if(useOuterDns)
         {
             const result = await fetch(`https://dns.firok.space/dns-query?name=${hostname}`, {
@@ -27,7 +27,6 @@ export async function queryHostnameIp(setHostname: Set<string>, serviceDns: Clou
             })
             jsonResult = await result.json() as object
         }
-
 
         const data = jsonResult.data[DefaultDnsChoice]
         if(data.status !== 'fulfilled' || data.value == null)
