@@ -33,8 +33,11 @@ export async function queryHostnameIp(setHostname: Set<string>, serviceDns: Clou
             throw '请求出错, 无法查询指定域名真实 IP: ' + hostname
 
         const jsonDnsValue = data.value['Answer']
-        if(!Array.isArray(jsonDnsValue) || jsonDnsValue.length <= 0)
-            throw '请求出错, 该域名无真实 IP 数据: ' + hostname
+        if(data.value.Status !== 0 || !Array.isArray(jsonDnsValue) || jsonDnsValue.length <= 0)
+        {
+            // throw '请求出错, 该域名无真实 IP 数据: ' + hostname
+            continue // 暂时不抛出异常
+        }
 
         ret[hostname] = jsonDnsValue[0].data
     }

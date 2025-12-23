@@ -19,7 +19,8 @@
 		"axios": "^1.13.2",
 		"lib-opal": "^0.5.0",
 		"vue": "^3.5.25",
-		"vue-router": "^4.6.3"
+		"vue-router": "^4.6.3",
+		"yaml": "^2.8.2"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.17.1",

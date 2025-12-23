@@ -1,29 +1,8 @@
-import {AbstractLink} from './abstract-link'
-import {SsLink} from './ss-link'
-import {VmessLink} from './vmess-link'
-import {SsrLink} from './ssr-link'
-
-export function readLink(textUrlPlain: string): AbstractLink | null
-{
-    const url = new URL(textUrlPlain)
-    const protocol = url.protocol
-    switch (protocol)
-    {
-        case 'ss':
-            return new SsLink(textUrlPlain)
-        case 'ssr':
-            return new SsrLink(textUrlPlain)
-        case 'vmess':
-            return new VmessLink(textUrlPlain)
-        default:
-            return null
-    }
-}
 
 /**
  * 订阅内容格式
  * */
-export type SubscriptionFormat =
+export type V2raySubscriptionFormat =
     /**
      * 自动识别
      * */
@@ -40,7 +19,7 @@ export type SubscriptionFormat =
 /**
  * 链接格式
  * */
-export type LinkFormat =
+export type V2rayLinkFormat =
     /**
      * 自动识别
      * */
@@ -59,25 +38,25 @@ export type LinkFormat =
      * */
     'full-b64'
 
-export interface SubscribeContent
+export interface V2raySubscriptionContent
 {
-    formatSubscription: SubscriptionFormat
+    formatSubscription: V2raySubscriptionFormat
 
-    listLink: AbstractLink[]
-    formatLink: LinkFormat
+    listLink: URL[]
+    formatLink: V2rayLinkFormat
 }
 
 /**
  * 读取完整订阅内容
  * @param {string} textSubscription 要读取的订阅内容
- * @param {SubscriptionFormat} formatSubscription 订阅内容格式
- * @param {LinkFormat} formatLink 订阅链接格式
+ * @param {V2raySubscriptionFormat} formatSubscription 订阅内容格式
+ * @param {V2rayLinkFormat} formatLink 订阅链接格式
  * */
-export function readSubscribeContent(
+export function readV2raySubscribeContent(
     textSubscription: string,
-    formatSubscription: SubscriptionFormat = 'auto',
-    formatLink: LinkFormat = 'auto'
-): SubscribeContent
+    formatSubscription: V2raySubscriptionFormat = 'auto',
+    formatLink: V2rayLinkFormat = 'auto'
+): V2raySubscriptionContent
 {
     let dataSubscription: string
 
@@ -108,7 +87,7 @@ export function readSubscribeContent(
         }
     }
 
-    const listLink: AbstractLink[] = []
+    const listLink: URL[] = []
     const listTextLine: string[] = dataSubscription.split('\n')
     for(let step = 0; step < listTextLine.length; step++)
     {
@@ -178,20 +157,7 @@ export function readSubscribeContent(
         }
 
         const urlLine = new URL(dataLine)
-        switch (urlLine.protocol)
-        {
-            case 'ss:':
-                listLink.push(new SsLink(dataLine))
-                break
-            case 'ssr:':
-                listLink.push(new SsrLink(dataLine))
-                break
-            case 'vmess:':
-                listLink.push(new VmessLink(dataLine))
-                break
-            default:
-                throw '无法识别的链接格式 (不支持的协议): ' + urlLine
-        }
+        listLink.push(urlLine)
     }
 
     return {

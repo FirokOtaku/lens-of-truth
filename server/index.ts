@@ -1,68 +1,24 @@
-import textBase64 from '../src/demo'
-import {readSubscribeContent, SubscribeContent} from './factory'
-import {queryHostnameIp} from './dns'
 import {CloudflareEnvWithDnsService, CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
-
-function buildResponse(body: object | string, statusCode: number): Response
-{
-    //
-    // text/plain; charset=UTF-8
-
-    const headers = new Headers()
-    headers.append('Access-Control-Allow-Origin', '*')
-    headers.append('Cache-Control', 'private, no-cache')
-
-    let bodyContent: string
-    switch (typeof body)
-    {
-        case 'string':
-            bodyContent = body
-            headers.append('Content-Type', 'text/plain')
-            break
-        case 'object':
-            bodyContent = JSON.stringify({
-                ...(body ?? {}),
-                code: statusCode,
-            })
-            headers.append('Content-Type', 'application/json')
-            break
-    }
-
-    return new Response(bodyContent, {
-        status: statusCode,
-        headers,
-    })
-}
-
-async function getParams(url: URL, request: Request, method: 'get' | 'post'): Promise<Record<string, any>>
-{
-    let params: Record<string, any> = {}
-
-    switch (method)
-    {
-        case 'get':
-        {
-            params = {}
-            for(const key of url.searchParams.keys())
-            {
-                params[key] = url.searchParams.get(key)
-            }
-            break
-        }
-        case 'post':
-        {
-            params = await request.json()
-            break
-        }
-    }
-
-    return params
-}
+import {dealWithV2raySubscription} from './v2ray-subscription'
+import {buildHeaderAppend, buildResponse, NamingMethod} from './response-util'
+import {getRequestParams} from './request-util'
+import {dealWithClashSubscription} from './clash-subscription'
 
 export default {
 	async fetch(request, env, ctx): Promise<Response>
     {
-        console.log('incoming | request', request, 'env', env, 'ctx', ctx)
+        // console.log('incoming | request', request, 'env', env, 'ctx', ctx)
+
+        let ua: string | null = null
+        const requestHeaders: Headers = request.headers
+        if(requestHeaders.has('User-Agent'))
+            ua = requestHeaders.get('User-Agent')
+        else if(requestHeaders.has('user-agent'))
+            ua = requestHeaders.get('user-agent')
+
+        const isClashClient = ua?.includes('clash')
+
+        const serviceDns: CloudflareEnvWorkerInstance = env.dns
 
 		const url = new URL(request.url)
         const pathname = url.pathname
@@ -77,23 +33,53 @@ export default {
         {
             case '/api/reveal/':
             case '/api/reveal':
-                const params = await getParams(url, request, method)
+                const params = await getRequestParams(url, request, method)
 
-                const link: string | null = params['link'] // 要读取的订阅链接
-                if(typeof link !== 'string' || link.trim().length === 0)
+                // 要读取的订阅链接
+                let link: string
+                READ_PARAMS: try
+                {
+                    if(typeof params['link-b64'] === 'string' && params['link-b64'].trim().length > 0)
+                    {
+                        const linkB64 = params['link-b64'].trim()
+                        link = atob(linkB64)
+                        break READ_PARAMS
+                    }
+                    else if(typeof params['link'] === 'string' && params['link'].trim().length > 0)
+                    {
+                        link = params['link'].trim()
+                        break READ_PARAMS
+                    }
+
+                    throw '参数模式错误'
+                }
+                catch (any)
+                {
                     return buildResponse({
                         msg: '参数错误',
-                        data: params,
+                        error: any,
                     }, 400)
+                }
 
                 const useRealDns: boolean = params['real'] == null || params['real'] === 'true' // 是否将订阅内容中所有域名转换为真实 IP
+                const methodNaming: NamingMethod = params['naming'] == null ? 'suffix' : params['naming'] // 命名方式
+
+                let headersAppend: Record<string, any>
 
                 // 加载订阅内容
                 let dataLink: string
                 try
                 {
-                    const resultLink = await fetch(link, { method: 'GET'})
+                    const headers = new Headers()
+                    if(ua != null) // 使用原始 UA 字符串作为查询参数
+                        headers.append('User-Agent', ua)
+
+                    const resultLink = await fetch(link, { method: 'GET', headers, })
                     dataLink = await resultLink.text()
+
+                    // dataLink = yamlContent // todo 测试用
+
+                    headersAppend = buildHeaderAppend(resultLink, methodNaming)
                 }
                 catch (any)
                 {
@@ -105,90 +91,18 @@ export default {
                 // 如果客户端没有特殊要求, 直接返回订阅内容
                 if(!useRealDns)
                 {
-                    return buildResponse(dataLink, 200)
+                    return buildResponse(dataLink, 200, headersAppend)
                 }
 
-                // 读取并处理订阅内容
-                let subscribeContent: SubscribeContent
-                let setLinkHostname: Set<string>
-                try
+                // 客户端要求使用真实 DNS, 开始根据不同情况处理订阅内容
+                if(isClashClient)
                 {
-                    subscribeContent = readSubscribeContent(textBase64, 'auto', 'auto')
-                    setLinkHostname = new Set<string>()
-                    for(const link of subscribeContent.listLink)
-                    {
-                        setLinkHostname.add(link.url.hostname)
-                    }
+                    return await dealWithClashSubscription(dataLink, serviceDns, headersAppend)
                 }
-                catch(any)
+                else // v2ray
                 {
-                    return buildResponse({
-                        msg: '无法处理的数据内容',
-                        error: any,
-                    }, 500)
+                    return await dealWithV2raySubscription(dataLink, serviceDns)
                 }
-
-                let mapHostnameToIp: Record<string, string>
-                try
-                {
-                    const serviceDns: CloudflareEnvWorkerInstance = env.dns
-                    mapHostnameToIp = await queryHostnameIp(setLinkHostname, serviceDns)
-                }
-                catch (any)
-                {
-                    return buildResponse({
-                        msg: '查询真实 IP 出错',
-                        error: `${any}`,
-                    }, 500)
-                }
-
-                const listUrlRelaceHost: URL[] = []
-                for(const link of subscribeContent.listLink)
-                {
-                    const urlOrigin = link.url
-                    const hostnameOrigin = urlOrigin.hostname
-                    const hostnameToIp = mapHostnameToIp[hostnameOrigin]
-                    const urlReplaceHost = link.replaceHost(hostnameToIp)
-                    listUrlRelaceHost.push(urlReplaceHost)
-                }
-
-                // const charLineSeparator = '\r\n'
-                const charLineSeparator = '\n'
-                let content = ``
-                for(const url of listUrlRelaceHost)
-                {
-                    const textUrl = url.toString()
-                    switch(subscribeContent.formatLink)
-                    {
-                        case 'content-b64':
-                            const indexUrlContent = textUrl.indexOf('//') + 2
-                            const textUrlContent = textUrl.substring(indexUrlContent)
-                            content += `${url.protocol}//${btoa(textUrlContent)}${charLineSeparator}`
-                            break
-                        case 'full-b64':
-                            const textContentB64 = btoa(textUrl)
-                            content += `${textContentB64}${charLineSeparator}`
-                            break
-
-                        case 'plain':
-                        default:
-                            content += `${textUrl}${charLineSeparator}`
-                            break
-                    }
-                }
-
-                switch(subscribeContent.formatSubscription)
-                {
-                    case 'base64':
-                        content = btoa(content)
-                        break
-
-                    case 'plain':
-                    default:
-                        break // do nothing
-                }
-
-                return buildResponse(content, 200)
 
             default:
                 return buildResponse({
