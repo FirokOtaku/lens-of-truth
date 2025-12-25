@@ -64,23 +64,10 @@ html, body, #app {
       <div class="content-area flex-horizontal" style="gap: 0.5rem">
         <div class="flex-dynamic">
           <n-select class="full-width"
-                    :options="ListTarget"
+                    :options="ListUserAgent"
                     :consistent-menu-width="false"
                     v-model:value="valueInputUserAgentMethod"/>
         </div>
-
-        <n-button class="flex-fixed"
-                  type="info"
-                  :ghost="!uiShowQrHard"
-                  @click="uiShowQrHard = !uiShowQrHard"
-                  @mouseenter="uiShowQrSoft = true"
-                  @mouseleave="uiShowQrSoft = false"
-        >
-          <n-icon size="1rem" class="btn-icon">
-            <QrCode20Regular class="btn-icon"/>
-          </n-icon>
-          二维码
-        </n-button>
 
         <n-tooltip placement="bottom">
           <template #trigger>
@@ -114,18 +101,32 @@ html, body, #app {
           </div>
         </n-tooltip>
 
-
       </div>
 
       <n-flex class="content-area" align="center" style="gap: 0.5rem; ">
 
+        <n-button class="flex-fixed"
+                  type="info"
+                  inline
+                  :ghost="!uiShowQrHard"
+                  @click="uiShowQrHard = !uiShowQrHard"
+                  @mouseenter="uiShowQrSoft = true"
+                  @mouseleave="uiShowQrSoft = false"
+                  size="tiny"
+        >
+          <n-icon size="1rem" class="btn-icon">
+            <QrCode20Regular class="btn-icon"/>
+          </n-icon>
+          二维码
+        </n-button>
+
         <div class="flex-dynamic"></div>
 
-        <n-icon size="1rem" color="lightgrey">
+        <n-icon size="0.75rem" color="lightgrey">
           <Settings16Regular/>
         </n-icon>
 
-        <div class="flex-fixed" style="width: 120px">
+        <div class="flex-fixed" style="width: 110px">
           <n-select size="tiny"
                     v-model:value="valueInputNamingMethod"
                     :options="ListNamingMethod"
@@ -133,12 +134,12 @@ html, body, #app {
           />
         </div>
 
-        <n-switch v-model:value="valueInputRealDns">
+        <n-switch class="flex-fixed" v-model:value="valueInputRealDns">
           <template #checked>
-            使用真实 IP
+            安全 DNS
           </template>
           <template #unchecked>
-            不使用真实 IP
+            原始 host
           </template>
         </n-switch>
 
@@ -169,7 +170,7 @@ import {ref, onMounted, readonly, computed} from 'vue'
 import axios from 'axios'
 import AppTitle from '@/components/AppTitle.vue'
 import AppFooter from '@/components/AppFooter.vue'
-import {ListTarget, ListNamingMethod} from './select-options'
+import {ListUserAgent, ListNamingMethod} from './select-options'
 import QrCode from '@/components/QrCode.vue'
 import type {UserAgentMethod} from '../server/request-util.ts'
 import type {NamingMethod} from '../server/response-util.ts'

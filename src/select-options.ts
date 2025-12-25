@@ -8,19 +8,26 @@ export interface SelectOption<TypeEntity>
     value: TypeEntity
 }
 
-export const ListTarget = readonly<SelectOption<UserAgentMethod>[]>([
+export const ListUserAgent = readonly<SelectOption<UserAgentMethod>[]>([
     {
-        label: '自动处理',
+        label: '自动',
         value: 'auto',
     },
     {
-        label: 'C****',
+        label: 'YAML (C***)',
+        // render: () => 'YAML',
         value: 'clash',
     },
-    // {
-    //     label: 'V****',
-    //     value: 'v2ray',
-    // },
+    {
+        label: 'Conf (S***)',
+        // render: () => 'Conf',
+        value: 'surge',
+    },
+    {
+        label: 'Base 64 (V***)',
+        // render: () => 'Base 64',
+        value: 'v2ray',
+    },
 ])
 
 export const ListNamingMethod = readonly<SelectOption<NamingMethod>[]>([

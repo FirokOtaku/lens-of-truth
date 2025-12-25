@@ -3,6 +3,7 @@ import {dealWithV2raySubscription} from './v2ray-subscription'
 import {buildHeaderAppend, buildResponse, NamingMethod} from './response-util'
 import {getRequestParams, UserAgentMethod} from './request-util'
 import {dealWithClashSubscription} from './clash-subscription'
+import {dealWithSurgeSubscription} from './surge-subscription'
 
 export default {
 	async fetch(request, env, ctx): Promise<Response>
@@ -77,7 +78,7 @@ export default {
 
                     // dataLink = yamlContent // todo 测试用
 
-                    headersAppend = buildHeaderAppend(resultLink, methodNaming)
+                    headersAppend = buildHeaderAppend(resultLink, methodNaming, ua)
                 }
                 catch (any)
                 {
@@ -93,13 +94,17 @@ export default {
                 }
 
                 // 客户端要求使用真实 DNS, 开始根据不同情况处理订阅内容
-                if(ua === 'clash')
+                switch (ua)
                 {
-                    return await dealWithClashSubscription(dataLink, serviceDns, headersAppend)
-                }
-                else // v2ray | auto
-                {
-                    return await dealWithV2raySubscription(dataLink, serviceDns)
+                    case 'clash':
+                        return await dealWithClashSubscription(dataLink, serviceDns, headersAppend)
+                    case 'surge':
+                        return await dealWithSurgeSubscription(dataLink, serviceDns, headersAppend)
+
+                    case 'auto':
+                    case 'v2ray':
+                    default:
+                        return await dealWithV2raySubscription(dataLink, serviceDns)
                 }
 
             default:

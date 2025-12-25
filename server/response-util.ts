@@ -1,3 +1,4 @@
+import type {UserAgentMethod} from './request-util.ts'
 
 const DefaultNamingSuffix = encodeURIComponent(' - LoT 🪞')
 const DefaultNamingPrefix = encodeURIComponent('🪞 LoT - ')
@@ -19,7 +20,11 @@ export type NamingMethod =
     'origin'
 
 
-export function buildHeaderAppend(response: Response, methodNaming: NamingMethod): Record<string, any>
+export function buildHeaderAppend(
+    response: Response,
+    methodNaming: NamingMethod,
+    ua: UserAgentMethod,
+): Record<string, any>
 {
     const headersAppend: Record<string, any> = {}
 
@@ -100,6 +105,12 @@ export function buildHeaderAppend(response: Response, methodNaming: NamingMethod
                         // 不需要做处理了
                     }
                 }
+
+                // 处理 surge 特殊情况
+                if(ua === 'surge' && filenameOrigin != null && filenameOrigin.endsWith('.conf'))
+                {
+                    filenameOrigin = filenameOrigin.substring(0, filenameOrigin.length - 5)
+                }
             }
         }
 
@@ -122,6 +133,12 @@ export function buildHeaderAppend(response: Response, methodNaming: NamingMethod
                     filename = filenameOrigin
                     break PARSE_NAME
             }
+        }
+
+        // 处理 surge 特殊情况
+        if(ua === 'surge' && filename != null)
+        {
+            filename = filename + '.conf'
         }
 
         if(filename != null)

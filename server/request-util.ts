@@ -5,6 +5,7 @@ export type UserAgentMethod =
      * */
     'auto' |
     'clash' |
+    'surge' |
     'v2ray'
 
 export async function getRequestParams(url: URL, request: Request, method: 'get' | 'post'): Promise<Record<string, any>>
