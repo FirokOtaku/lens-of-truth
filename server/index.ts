@@ -1,22 +1,13 @@
 import {CloudflareEnvWithDnsService, CloudflareEnvWorkerInstance} from './cloudflare-env-worker-instance'
 import {dealWithV2raySubscription} from './v2ray-subscription'
 import {buildHeaderAppend, buildResponse, NamingMethod} from './response-util'
-import {getRequestParams} from './request-util'
+import {getRequestParams, UserAgentMethod} from './request-util'
 import {dealWithClashSubscription} from './clash-subscription'
 
 export default {
 	async fetch(request, env, ctx): Promise<Response>
     {
         // console.log('incoming | request', request, 'env', env, 'ctx', ctx)
-
-        let ua: string | null = null
-        const requestHeaders: Headers = request.headers
-        if(requestHeaders.has('User-Agent'))
-            ua = requestHeaders.get('User-Agent')
-        else if(requestHeaders.has('user-agent'))
-            ua = requestHeaders.get('user-agent')
-
-        const isClashClient = ua?.includes('clash')
 
         const serviceDns: CloudflareEnvWorkerInstance = env.dns
 
@@ -64,6 +55,13 @@ export default {
                 const useRealDns: boolean = params['real'] == null || params['real'] === 'true' // 是否将订阅内容中所有域名转换为真实 IP
                 const methodNaming: NamingMethod = params['naming'] == null ? 'suffix' : params['naming'] // 命名方式
 
+                const requestHeaders: Headers = request.headers
+                const ua: UserAgentMethod =
+                    params['ua'] ??
+                    requestHeaders.get('User-Agent') ??
+                    requestHeaders.get('user-agent') ??
+                    'auto' // 空 UA, 会被忽略
+
                 let headersAppend: Record<string, any>
 
                 // 加载订阅内容
@@ -71,7 +69,7 @@ export default {
                 try
                 {
                     const headers = new Headers()
-                    if(ua != null) // 使用原始 UA 字符串作为查询参数
+                    if(ua != null && ua !== 'auto') // 添加 UA 请求头, 这会影响服务端返回的格式
                         headers.append('User-Agent', ua)
 
                     const resultLink = await fetch(link, { method: 'GET', headers, })
@@ -95,11 +93,11 @@ export default {
                 }
 
                 // 客户端要求使用真实 DNS, 开始根据不同情况处理订阅内容
-                if(isClashClient)
+                if(ua === 'clash')
                 {
                     return await dealWithClashSubscription(dataLink, serviceDns, headersAppend)
                 }
-                else // v2ray
+                else // v2ray | auto
                 {
                     return await dealWithV2raySubscription(dataLink, serviceDns)
                 }

@@ -1,4 +1,12 @@
 
+export type UserAgentMethod =
+    /**
+     * 使用原始 UA
+     * */
+    'auto' |
+    'clash' |
+    'v2ray'
+
 export async function getRequestParams(url: URL, request: Request, method: 'get' | 'post'): Promise<Record<string, any>>
 {
     let params: Record<string, any> = {}

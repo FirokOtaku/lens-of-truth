@@ -1,6 +1,14 @@
 import {readonly} from 'vue'
+import type {NamingMethod} from '../server/response-util.ts'
+import type {UserAgentMethod} from '../server/request-util.ts'
 
-export const ListTarget = readonly([
+export interface SelectOption<TypeEntity>
+{
+    label: string
+    value: TypeEntity
+}
+
+export const ListTarget = readonly<SelectOption<UserAgentMethod>[]>([
     {
         label: '自动处理',
         value: 'auto',
@@ -9,12 +17,13 @@ export const ListTarget = readonly([
         label: 'C****',
         value: 'clash',
     },
-    {
-        label: 'V****',
-        value: 'v2ray',
-    },
+    // {
+    //     label: 'V****',
+    //     value: 'v2ray',
+    // },
 ])
-export const ListNamingMethod = readonly([
+
+export const ListNamingMethod = readonly<SelectOption<NamingMethod>[]>([
     {
         label: '名称追加后缀',
         value: 'suffix',

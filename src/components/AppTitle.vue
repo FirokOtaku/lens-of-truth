@@ -11,7 +11,8 @@
   {
     font-size: 5rem;
   }
-  transition: font-size 0.8s ease;
+  transition: font-size 0.8s ease,
+              opacity 0.8s ease ;
 
   height: 12rem;
   width: 100%;
@@ -70,7 +71,7 @@
 </style>
 
 <template>
-  <div class="lot-title">
+  <div class="lot-title" :style="viewStyleBase">
 
     <div class="lot-title-eng">
       Lens of Truth
@@ -83,5 +84,17 @@
 </template>
 
 <script setup lang="ts">
+
+import {computed, type CSSProperties} from 'vue'
+
+const props = defineProps({
+  active: { type: Boolean, default: true, },
+})
+
+const viewStyleBase = computed(() => {
+  return {
+    opacity: props.active ? 1 : 0,
+  } as CSSProperties
+})
 
 </script>

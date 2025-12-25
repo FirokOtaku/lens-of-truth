@@ -1,6 +1,10 @@
 <template>
   <n-config-provider :theme="darkTheme" class="full">
-    <App />
+
+    <n-message-provider>
+      <App />
+    </n-message-provider>
+
   </n-config-provider>
 </template>
 

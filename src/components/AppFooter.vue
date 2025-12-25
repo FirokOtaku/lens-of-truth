@@ -8,7 +8,7 @@
     <div class="flex-fixed">
 
       <span style="color: dimgray; margin-right: 0.75rem">
-        LoT v{{ appVersion }}
+        LoT v{{ appVersion }}, based on NaiveUI
       </span>
 
       <n-tooltip>

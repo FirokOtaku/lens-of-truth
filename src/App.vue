@@ -46,15 +46,18 @@ html, body, #app {
       <n-flex align="center"
               justify="center"
               style="height: 12rem; position: relative; top: 0; left: 0;">
-        <app-title style="position: absolute; top: 0; left: 0;"/>
-        <qr-code style="position: absolute; top: 0; left: 0;"/>
+        <app-title :active="!uiShowQr"
+                   style="position: absolute; top: 0; left: 0;"/>
+        <qr-code :active="uiShowQr"
+                 :link="urlToUse"
+                 style="position: absolute; top: 0; left: 0;"/>
       </n-flex>
     </div>
 
     <n-flex class="flex-fixed full-width " justify="center" align="center" vertical>
 
       <div class="content-area">
-        <n-input v-model="valueInputUrl"
+        <n-input v-model:value="valueInputUrl"
                  placeholder="输入链接" />
       </div>
 
@@ -62,11 +65,16 @@ html, body, #app {
         <div class="flex-dynamic">
           <n-select class="full-width"
                     :options="ListTarget"
-                    v-model:value="valueInputTarget"/>
+                    v-model:value="valueInputUserAgentMethod"/>
         </div>
 
         <n-button class="flex-fixed"
-                  type="info" ghost>
+                  type="info"
+                  :ghost="!uiShowQrHard"
+                  @click="uiShowQrHard = !uiShowQrHard"
+                  @mouseenter="uiShowQrSoft = true"
+                  @mouseleave="uiShowQrSoft = false"
+        >
           <n-icon size="1rem" class="btn-icon">
             <QrCode20Regular class="btn-icon"/>
           </n-icon>
@@ -75,7 +83,8 @@ html, body, #app {
 
         <n-tooltip placement="bottom">
           <template #trigger>
-            <n-button type="info" ghost>
+            <n-button type="info" ghost
+                      @click="onClickCopy">
               <n-icon size="1rem" class="btn-icon">
                 <Copy16Regular/>
               </n-icon>
@@ -88,9 +97,10 @@ html, body, #app {
           </div>
         </n-tooltip>
 
-        <n-tooltip placement="bottom" v-if="valueInputTarget !== 'auto'">
+        <n-tooltip placement="bottom" v-if="valueInputUserAgentMethod !== 'auto'">
           <template #trigger>
-            <n-button type="primary" ghost>
+            <n-button type="primary" ghost
+                      @click="onClickImport">
               <n-icon size="1rem" class="btn-icon">
                 <ArrowImport20Regular/>
               </n-icon>
@@ -154,17 +164,88 @@ import {
   Code16Regular,
   Settings16Regular,
 } from '@vicons/fluent'
-import {ref, onMounted, readonly} from 'vue'
+import {ref, onMounted, readonly, computed} from 'vue'
 import axios from 'axios'
 import AppTitle from '@/components/AppTitle.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import {ListTarget, ListNamingMethod} from './select-options'
+import QrCode from '@/components/QrCode.vue'
+import type {UserAgentMethod} from '../server/request-util.ts'
+import type {NamingMethod} from '../server/response-util.ts'
+import { useMessage } from 'naive-ui'
+
+const message = useMessage()
+
+const uiShowQrSoft = ref<boolean>(false)
+const uiShowQrHard = ref<boolean>(true)
+const uiShowQr = computed(() => uiShowQrSoft.value || uiShowQrHard.value)
 
 
-const valueInputUrl = ref<any>('')
-const valueInputTarget = ref<string>('auto')
+const valueInputUrl = ref<string>('')
+const valueInputUserAgentMethod = ref<UserAgentMethod>('auto')
 const valueInputRealDns = ref<boolean>(true)
-const valueInputNamingMethod = ref<string>('suffix')
+const valueInputNamingMethod = ref<NamingMethod>('suffix')
+
+const urlToUse = computed(() => {
+  const uaMethod: UserAgentMethod = valueInputUserAgentMethod.value
+  const urlOrigin = valueInputUrl.value.trim()
+  const real: boolean = valueInputRealDns.value
+  const namingMethod: NamingMethod = valueInputNamingMethod.value
+
+  if(urlOrigin === '')
+    return ''
+
+  const link = encodeURIComponent(urlOrigin)
+  const serviceHost = window.location.host
+  const serviceProtocol = window.location.protocol
+
+  return `${serviceProtocol}//${serviceHost}/api/reveal?real=${real}&naming=${namingMethod}&ua=${uaMethod}&link=${link}`
+})
+
+async function onClickCopy()
+{
+  const link = urlToUse.value.trim()
+  if(link === '')
+  {
+    message.error('请输入链接')
+    return
+  }
+
+  await navigator.clipboard.writeText(link)
+}
+function onClickImport()
+{
+  const link: string = urlToUse.value.trim()
+  const ua: UserAgentMethod = valueInputUserAgentMethod.value
+  if(link === '')
+  {
+    message.error('请输入链接')
+    return
+  }
+  if(ua === 'auto')
+  {
+    message.error('自动模式不支持导入')
+    return
+  }
+
+  let linkCovered = ''
+  switch (ua)
+  {
+    case 'clash':
+      linkCovered = `clash://install-config?url=${encodeURIComponent(link)}`
+      break
+    case 'v2ray':
+      linkCovered = `v2ray://${encodeURIComponent(link)}`
+      break
+  }
+
+  const domLink = document.createElement('a')
+  domLink.href = linkCovered
+  domLink.target = '_blank'
+  domLink.click()
+
+  // window.open(link, '_blank')
+}
 
 onMounted(async () => {
 
