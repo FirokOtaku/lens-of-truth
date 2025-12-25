@@ -46,11 +46,11 @@ html, body, #app {
       <n-flex align="center"
               justify="center"
               style="height: 12rem; position: relative; top: 0; left: 0;">
-        <app-title :active="!uiShowQr"
-                   style="position: absolute; top: 0; left: 0;"/>
         <qr-code :active="uiShowQr"
                  :link="urlToUse"
                  style="position: absolute; top: 0; left: 0;"/>
+        <app-title :active="!uiShowQr"
+                   style="position: absolute; top: 0; left: 0;"/>
       </n-flex>
     </div>
 
@@ -65,6 +65,7 @@ html, body, #app {
         <div class="flex-dynamic">
           <n-select class="full-width"
                     :options="ListTarget"
+                    :consistent-menu-width="false"
                     v-model:value="valueInputUserAgentMethod"/>
         </div>
 
@@ -177,7 +178,7 @@ import { useMessage } from 'naive-ui'
 const message = useMessage()
 
 const uiShowQrSoft = ref<boolean>(false)
-const uiShowQrHard = ref<boolean>(true)
+const uiShowQrHard = ref<boolean>(false)
 const uiShowQr = computed(() => uiShowQrSoft.value || uiShowQrHard.value)
 
 

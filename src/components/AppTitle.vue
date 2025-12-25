@@ -44,12 +44,12 @@
 
 .lot-title-eng
 {
-  font-family: "Blackadder ITC", system-ui;
+  font-family: "Blackadder ITC", Serif, system-ui;
   text-shadow: grey 2px -2px;
 }
 .lot-title-zh
 {
-  font-family: "宋体", "SimSun", system-ui;
+  font-family: "宋体", "SimSun", Serif, system-ui;
   text-shadow: grey 2px -2px;
   opacity: 0;
 }
