@@ -93,7 +93,7 @@ async function updateQrCode(value: string, requestId: string): Promise<void>
   {
     if(dataQrCode.value.requestId !== requestId)
       return
-    dataQrCode.value = { requestId, status: 'failed', error: any, }
+    dataQrCode.value = { requestId, status: 'failed', /*error: any,*/ }
   }
 }
 watch(() => props.link, (newValue, oldValue) => {

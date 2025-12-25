@@ -53,14 +53,14 @@ export function buildHeaderAppend(response: Response, methodNaming: NamingMethod
 
         if(valueOrigin.startsWith('attachment;'))
         {
-            const parts = valueOrigin.split(';')
+            const parts: string[] = valueOrigin.split(';')
             if(parts.length > 1)
             {
                 // 转换键值对
                 const map: Record<string, string> = {}
                 for(let step = 1; step < parts.length; step++)
                 {
-                    const part = parts[step] // filename=xxxx
+                    const part: string = parts[step] as string // filename=xxxx
                     const indexCharEqual = part.indexOf('=')
                     if(indexCharEqual <= 0)
                         continue
