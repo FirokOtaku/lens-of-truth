@@ -3,7 +3,8 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.worker.tsbuildinfo",
     "types": [ "./worker-configuration.d.ts","vite/client"],
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "allowImportingTsExtensions": true,
   },
   "include": ["server"],
 }

@@ -1,8 +1,7 @@
 
 export function replaceHost(url: URL, host: string): URL
 {
-    const urlOrigin = url
-    const urlNew = new URL(urlOrigin)
+    const urlNew = new URL(url)
     urlNew.host = host
     return urlNew
 }

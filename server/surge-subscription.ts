@@ -32,12 +32,7 @@ export interface SurgeSubscriptionLine
      * */
     textRaw: string
 }
-// 剩余流量：64.82 GB=ss,
-// suibian-node-de.84f72fc7-05a1-4544-8548-a7325443452f.com,
-// 50001,
-// encrypt-method=chacha20-ietf-poly1305,
-// password=cfb4ff68-0d95-448d-a46c-3f058089e078,
-// tfo=true,udp-relay=true
+
 export interface SurgeSubscriptionLineProxy extends SurgeSubscriptionLine
 {
     nameWithProtocol: string,
@@ -64,7 +59,9 @@ function readSurgeSubscriptionContent(text: string): SurgeSubscriptionContent
         name: '',
         listLine: [],
     }
-    const listModule: SurgeSubscriptionModule[] = []
+    const listModule: SurgeSubscriptionModule[] = [
+        currentModule,
+    ]
     const mapModule: Record<string, SurgeSubscriptionModule> = {}
     mapModule[''] = currentModule
 

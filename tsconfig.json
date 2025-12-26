@@ -16,5 +16,6 @@
 			"./worker-configuration.d.ts"
 		],
       "noImplicitAny": false,
+      "allowImportingTsExtensions": true
     }
 }

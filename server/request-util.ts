@@ -5,6 +5,7 @@ export type UserAgentMethod =
      * */
     'auto' |
     'clash' |
+    'surfboard' |
     'surge' |
     'v2ray'
 

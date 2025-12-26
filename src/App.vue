@@ -19,7 +19,7 @@ html, body, #app {
   width: 600px;
   @media screen and (max-width: 768px)
   {
-    width: 95%;
+    width: calc(100% - 1rem);
   }
   padding: 0 1rem;
 }
@@ -85,7 +85,7 @@ html, body, #app {
           </div>
         </n-tooltip>
 
-        <n-tooltip placement="bottom" v-if="valueInputUserAgentMethod !== 'auto'">
+        <n-tooltip placement="bottom" v-if="valueInputUserAgentMethod !== 'auto' && valueInputUserAgentMethod !== 'v2ray'">
           <template #trigger>
             <n-button type="primary" ghost
                       @click="onClickImport">
@@ -236,7 +236,10 @@ function onClickImport()
     case 'clash':
       linkCovered = `clash://install-config?url=${encodeURIComponent(link)}`
       break
-    case 'v2ray':
+    case 'surge':
+      linkCovered = `surge://install-config?url=${encodeURIComponent(link)}`
+      break
+    case 'v2ray': // todo
       linkCovered = `v2ray://${encodeURIComponent(link)}`
       break
   }

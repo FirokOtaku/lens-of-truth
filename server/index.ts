@@ -98,6 +98,9 @@ export default {
                 {
                     case 'clash':
                         return await dealWithClashSubscription(dataLink, serviceDns, headersAppend)
+
+                    // 这俩配置文件格式基本一样
+                    case 'surfboard':
                     case 'surge':
                         return await dealWithSurgeSubscription(dataLink, serviceDns, headersAppend)
 

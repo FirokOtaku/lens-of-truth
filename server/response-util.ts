@@ -1,4 +1,5 @@
 import type {UserAgentMethod} from './request-util.ts'
+import {appVersion} from './server-meta.ts'
 
 const DefaultNamingSuffix = encodeURIComponent(' - LoT 🪞')
 const DefaultNamingPrefix = encodeURIComponent('🪞 LoT - ')
@@ -106,8 +107,8 @@ export function buildHeaderAppend(
                     }
                 }
 
-                // 处理 surge 特殊情况
-                if(ua === 'surge' && filenameOrigin != null && filenameOrigin.endsWith('.conf'))
+                // 处理 surge 和 surfboard 特殊情况
+                if((ua === 'surge' || ua === 'surfboard') && filenameOrigin != null && filenameOrigin.endsWith('.conf'))
                 {
                     filenameOrigin = filenameOrigin.substring(0, filenameOrigin.length - 5)
                 }
@@ -135,8 +136,8 @@ export function buildHeaderAppend(
             }
         }
 
-        // 处理 surge 特殊情况
-        if(ua === 'surge' && filename != null)
+        // 处理 surge 和 surfboard 特殊情况
+        if((ua === 'surge' || ua === 'surfboard') && filename != null)
         {
             filename = filename + '.conf'
         }
@@ -171,6 +172,8 @@ export function buildResponse(
             headersToResponse.append(key, headersAppend[key])
         }
     }
+    headersToResponse.append('X-Refraction-Service', `Lens of Truth`)
+    headersToResponse.append('X-Refraction-Version', appVersion)
 
     let bodyContent: string
     switch (typeof body)

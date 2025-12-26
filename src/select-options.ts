@@ -24,7 +24,11 @@ export const ListUserAgent = readonly<SelectOption<UserAgentMethod>[]>([
         value: 'surge',
     },
     {
-        label: 'Base 64 (V***)',
+        label: 'Conf (S********)',
+        value: 'surfboard',
+    },
+    {
+        label: 'Base64 (V***)',
         // render: () => 'Base 64',
         value: 'v2ray',
     },
