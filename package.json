@@ -25,6 +25,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.17.1",
+		"@cloudflare/workers-types": "^4.20251225.0",
 		"@tsconfig/node24": "^24.0.3",
 		"@types/node": "^24.10.1",
 		"@vicons/fluent": "^0.13.0",
