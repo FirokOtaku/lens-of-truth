@@ -11,6 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Build project first
+        run: |
+          npm install
+          npm run build
+
       - name: Build & Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
