@@ -1,6 +1,6 @@
 {
 	"name": "lens-of-truth",
-	"version": "0.14.0",
+	"version": "0.15.0",
 	"private": true,
 	"type": "module",
 	"engines": {
@@ -12,7 +12,7 @@
 		"preview": "npm run build && wrangler dev",
 		"build-only": "vite build",
 		"type-check": "vue-tsc --build",
-		"deploy": "npm run build && wrangler deploy",
+		"deploy": "echo \"NPM RUN [DEPLOY]\" && npm run build && echo \"AFTER BUILD\" && ll ./ && wrangler deploy",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
